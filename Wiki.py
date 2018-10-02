@@ -5,6 +5,7 @@ from collections import Counter
 from random import randint
 import time
 import sys
+import webbrowser
 
 
 def dups(l, value):
@@ -20,48 +21,8 @@ def zip(list_of_strings):
 	return zipString[0:-1]
 
 punctuation = [",",":",";", "''","?", ".", "(", ")", "/",  ]
-    
+previousPages = ["Main_Page"]
 
-		#print(str(item.get('href')) +",\t"+ str(item.get('title')))
-
-#goes to one of the new links and creates a new BeautifulSoup obj
-"""page2 = requests.get("https://en.wikipedia.org"+str(fresh_links[3][0]))
-contents2 = page2.content
-soup2 = BeautifulSoup(contents2, 'html.parser')
-links2 = soup2.find_all('p')"""
-#for item in links2:
-	#print(item)
-
-
-"""query = "Saddam Hussein"
-search = search(query, tld = "com", lang = "en", num = 100, stop = 1, pause = 2 )
-reference_links = []
-for item in search:
-	if "wikipedia" not in str(item):
-		reference_links.append(item)
-		#print(item)
-
-gsearchp1 = requests.get(str(reference_links[1]))
-print(str(reference_links[1]))
-gcontents = gsearchp1.content
-soup3 = BeautifulSoup(gcontents, 'html.parser')
-
-f = open("gsearch.txt", 'w')
-
-text = soup3.find_all('p')
-for item in text:
-	f.write(str(item.get_text())+ "\n")
-
-f.close()"""
-
-
-
-#print(individualWords[13].replace(r"\n", ""))
-
-
-
-#word_count = [x for  x in word_count if x[]
-#print(str(links3).encode("utf-8"))
 
 def keywords(query, num_of_requests):
 	#builds the url to search for the given query with the given amount of responses
@@ -105,6 +66,7 @@ def keywords(query, num_of_requests):
 	word_count = Counter(individualWords).most_common(len(individualWords))
 	#print(word_count)
 	return word_count
+	#return(individualWords)
 
 
 #returns a list where each element is of the form (link, title of the link)
@@ -134,9 +96,8 @@ def replace_in_string(string, list_of_items_to_remove):
 
 
 
-def return_new_link(starting_page, target_page):
+def return_new_link(starting_page, keywordslist, target_page):
 	links  = get_wiki_links(starting_page)
-	keywordslist = keywords(target_page, 30)
 	perfect_hit = ""
 
 	#for some reason there is an apostrophe before the string which for some reason wont be removed so well just test all chars but the first one
@@ -147,7 +108,8 @@ def return_new_link(starting_page, target_page):
 			elif word[0] in item[1]:
 				item[2] += word[1]
 
-	links = [(x[2],x[0], x[1]) for x in links if perfect_hit == ""]
+	links = [(x[2],x[0], x[1]) for x in links if perfect_hit == "" and x[0][6:] not in previousPages]
+	#[numer_of_hits, link, title of link]
 	links = [x for x in sorted(links, reverse = True)]
 	#print(links)
 	if perfect_hit != "":
@@ -156,10 +118,9 @@ def return_new_link(starting_page, target_page):
 		return links[0][1]
 	elif links[0][0] == 1:
 		temp = [x[1] for x in links if x[0] != 0]
-		return temp[randint(0,len(temp))]
-	#TODO: make a test case when the leading one if equal to one
+		return temp[randint(0,len(temp)-1)]
 	elif  links[0][0] == 0:
-		return links[randint(0, len(links))][0]
+		return links[randint(0, len(links)-1)][1]
 
 
 
@@ -167,16 +128,27 @@ def wiki_links(starting_page, ending_page):
 	f = open("wiki.txt", "a")
 	start = starting_page
 	end = ending_page
+	keywordslist = keywords(end, 100)
 	desination_reached = False
 	iterations = 0
-	while(not desination_reached and iterations < 10):
-		temp = return_new_link(start, end)
+	while(not desination_reached and iterations < 500000):
+		temp = return_new_link(start, keywordslist, end)
+		previousPages.append(start)
+		#print(previousPages)
 		start = temp[6:]
 		print(start)
 		sys.stdout.flush()
 		iterations += 1
-		desination_reached = ending_page ==  start.replace("_", " ")
+		desination_reached = ending_page.lower() ==  start.replace("_", " ").partition("#")[0].lower()
+		#time.sleep(50)
+	return (start,iterations)
 
 
-wiki_links("georgia", "chicken")
+#print("chicken#awesome".partition("#")[0])
+
 #print(return_new_link("elmo", "Saddam Hussein"))
+#print(wiki_links("kentukcy", "ostrich"))
+result = wiki_links("evil", "triple h")
+webbrowser.open("https://en.wikipedia.org/wiki/"+result[0])
+print(result[1])
+#print(keywords("hitler", 30))
