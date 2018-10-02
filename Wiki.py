@@ -151,4 +151,3 @@ def wiki_links(starting_page, ending_page):
 result = wiki_links("evil", "triple h")
 webbrowser.open("https://en.wikipedia.org/wiki/"+result[0])
 print(result[1])
-#print(keywords("hitler", 30))
